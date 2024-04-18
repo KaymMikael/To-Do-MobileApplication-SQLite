@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">To-Do</string>
+    <string name="pick_up_mail">Pick up mail</string>
+    <string name="_4_17_2024">4/17/2024</string>
+    <string name="add_task">Add Task</string>
+    <string name="task_name">Task Name</string>
+</resources>
