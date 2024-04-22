@@ -3,4 +3,5 @@
 - Mark task as completed
 - Task Counter
 - To-Do and Completed Task list
-- Delete Task
+- Delete Task (click task name)
+- Task reminder (hold a card view or task)
