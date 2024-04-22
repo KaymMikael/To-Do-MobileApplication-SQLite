@@ -8,7 +8,10 @@ package com.mawd.to_do;
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -103,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements ToDoAdapter.OnTas
             return insets;
         });
 
+        createNotificationChannel();
         setReference();
         displayData();
         displayCompletedData();
@@ -209,5 +213,17 @@ public class MainActivity extends AppCompatActivity implements ToDoAdapter.OnTas
 
     private void showMessage(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "todo_channel";
+            String desc = "Channel for Alarm Manager";
+            int imp = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel("todo_channel", name, imp);
+            channel.setDescription(desc);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 }

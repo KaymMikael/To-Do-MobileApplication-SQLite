@@ -1,18 +1,25 @@
 package com.mawd.to_do.adapters;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mawd.to_do.Database;
 import com.mawd.to_do.MainActivity;
 import com.mawd.to_do.R;
+import com.mawd.to_do.notifications.NotificationReceiver;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -29,6 +36,8 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
     private Context context;
     private ArrayList<String> taskNameList, dueDateList;
     private OnTaskCompletedListener taskCompletedListener;
+    private AlarmManager alarmManager;
+    private PendingIntent pendingIntent;
 
     public ToDoAdapter(Context context, ArrayList<String> taskNameList, ArrayList<String> dueDateList, OnTaskCompletedListener listener) {
         this.context = context;
@@ -52,10 +61,12 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
         String taskName = holder.txtTaskName.getText().toString();
         String dueDate = dueDateList.get(position); // Fetch due date from the list
         int id = db.getIdByTaskName(taskName);
+
         // Check if the due date is today
         if (isDueToday(dueDate)) {
             String str = "Due Today";
             holder.txtTaskDueDate.setText(str);
+
         } else {
             holder.txtTaskDueDate.setText(dueDate);
         }
@@ -77,6 +88,11 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
             ((MainActivity) context).updateCounter(taskNameList.size());
             notifyDataSetChanged();
         });
+
+        holder.cardBtn.setOnLongClickListener(v -> {
+            scheduleNotification(taskNameList.get(position), dueDate);
+            return false;
+        });
     }
 
 
@@ -89,13 +105,14 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
 
         TextView txtTaskName, txtTaskDueDate;
         ImageView btnMarkAsDone;
+        CardView cardBtn;
 
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             txtTaskName = itemView.findViewById(R.id.txtTaskName);
             txtTaskDueDate = itemView.findViewById(R.id.txtTaskDueDate);
             btnMarkAsDone = itemView.findViewById(R.id.btnMarkAsDone);
-
+            cardBtn = itemView.findViewById(R.id.cardBtn);
         }
     }
 
@@ -124,5 +141,44 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
         int dueDay = dueDateCalendar.get(Calendar.DAY_OF_MONTH);
 
         return (todayYear == dueYear && todayMonth == dueMonth && todayDay == dueDay);
+    }
+
+    private void scheduleNotification(String taskName, String dueDate) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+
+        // Create an Intent for the notification
+        Intent intent = new Intent(context, NotificationReceiver.class);
+        intent.putExtra("task_name", taskName);
+        intent.putExtra("due_date", dueDate);
+
+        // Create a unique requestCode for each notification
+        int requestCode = taskName.hashCode(); // Using hashCode as requestCode
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        // Parse the due date
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
+        Calendar dueDateCalendar = Calendar.getInstance();
+        try {
+            dueDateCalendar.setTime(dateFormat.parse(dueDate));
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        // Set the time for the notification
+        long triggerTime = dueDateCalendar.getTimeInMillis();
+        long currentTime = System.currentTimeMillis();
+
+        // Schedule the notification if the due date is in the future
+        if (triggerTime > currentTime) {
+            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+            showMessage("A reminder is set for " + taskName);
+        } else {
+            showMessage("The task is due today");
+        }
+    }
+
+    private void showMessage(String msg) {
+        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
     }
 }

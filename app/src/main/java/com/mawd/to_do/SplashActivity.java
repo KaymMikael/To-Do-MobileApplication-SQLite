@@ -12,7 +12,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class SplashActivity extends AppCompatActivity {
 
-    private final int timeDelay = 3 * 1000;
+    private final int timeDelay = 2 * 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +25,7 @@ public class SplashActivity extends AppCompatActivity {
             return insets;
         });
 
-        new Handler().postDelayed((Runnable) () -> {
+        new Handler().postDelayed(() -> {
             startActivity(new Intent(SplashActivity.this, MainActivity.class));
             finish();
         }, timeDelay);
