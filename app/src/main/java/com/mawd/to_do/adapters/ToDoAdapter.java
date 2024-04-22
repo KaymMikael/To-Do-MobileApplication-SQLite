@@ -85,6 +85,7 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
             db.removeTask(id);
             taskNameList.remove(position);
             dueDateList.remove(position);
+            cancelNotification(taskName);
             ((MainActivity) context).updateCounter(taskNameList.size());
             notifyDataSetChanged();
         });
@@ -173,7 +174,10 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
         if (triggerTime > currentTime) {
             alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
             showMessage("A reminder is set for " + taskName);
-        } else {
+        }else if(triggerTime < currentTime) {
+            showMessage("The task is past due");
+        }
+        else {
             showMessage("The task is due today");
         }
     }
@@ -181,4 +185,12 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
     private void showMessage(String msg) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
     }
+    private void cancelNotification(String taskName) {
+        Intent intent = new Intent(context, NotificationReceiver.class);
+        int requestCode = taskName.hashCode(); // Use the same requestCode as when creating the pending intent
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(pendingIntent);
+    }
+
 }
