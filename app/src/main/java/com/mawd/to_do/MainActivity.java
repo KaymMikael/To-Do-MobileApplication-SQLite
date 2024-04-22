@@ -5,11 +5,13 @@ no edit feature
  */
 package com.mawd.to_do;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -46,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements ToDoAdapter.OnTas
     private ArrayList<String> taskNameList, dueDateList, taskNameDoneList, taskDueDateDoneList;
 
     private Database db;
+
+    private static final int RC_NOTIFICATION = 99;
 
     private void setReference() {
         btnAddNewTask = findViewById(R.id.btnAddNewTask);
@@ -105,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements ToDoAdapter.OnTas
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
+        askPermission();
         createNotificationChannel();
         setReference();
         displayData();
@@ -224,6 +229,11 @@ public class MainActivity extends AppCompatActivity implements ToDoAdapter.OnTas
             channel.setDescription(desc);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
+        }
+    }
+    private void askPermission(){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, RC_NOTIFICATION);
         }
     }
 }
