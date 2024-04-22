@@ -13,7 +13,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mawd.to_do.Database;
@@ -66,7 +65,6 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
         if (isDueToday(dueDate)) {
             String str = "Due Today";
             holder.txtTaskDueDate.setText(str);
-
         } else {
             holder.txtTaskDueDate.setText(dueDate);
         }
@@ -166,6 +164,13 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
             return;
         }
 
+        // Get today's date
+        Calendar today = Calendar.getInstance();
+        today.set(Calendar.HOUR_OF_DAY, 0);
+        today.set(Calendar.MINUTE, 0);
+        today.set(Calendar.SECOND, 0);
+        today.set(Calendar.MILLISECOND, 0);
+
         // Set the time for the notification
         long triggerTime = dueDateCalendar.getTimeInMillis();
         long currentTime = System.currentTimeMillis();
@@ -174,17 +179,16 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
         if (triggerTime > currentTime) {
             alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
             showMessage("A reminder is set for " + taskName);
-        }else if(triggerTime < currentTime) {
-            showMessage("The task is past due");
-        }
-        else {
-            showMessage("The task is due today");
+        } else if (triggerTime < currentTime) {
+            showMessage("The task is past due/due today");
         }
     }
+
 
     private void showMessage(String msg) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
     }
+
     private void cancelNotification(String taskName) {
         Intent intent = new Intent(context, NotificationReceiver.class);
         int requestCode = taskName.hashCode(); // Use the same requestCode as when creating the pending intent
