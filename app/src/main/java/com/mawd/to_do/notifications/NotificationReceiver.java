@@ -24,8 +24,7 @@ public class NotificationReceiver extends BroadcastReceiver {
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         PendingIntent pendingI = PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_IMMUTABLE);
-        String taskName = intent.getStringExtra("task_name");
-        String contentText = taskName + " is due today!";
+        String contentText = "A task is due today!";
         // Check if the app has the required permission to vibrate
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
                 ContextCompat.checkSelfPermission(context, Manifest.permission.VIBRATE) == PackageManager.PERMISSION_GRANTED) {
