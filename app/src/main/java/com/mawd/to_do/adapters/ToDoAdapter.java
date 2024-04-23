@@ -18,7 +18,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.mawd.to_do.Database;
 import com.mawd.to_do.MainActivity;
 import com.mawd.to_do.R;
-import com.mawd.to_do.notifications.NotificationReceiver;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -35,8 +34,6 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
     private Context context;
     private ArrayList<String> taskNameList, dueDateList;
     private OnTaskCompletedListener taskCompletedListener;
-    private AlarmManager alarmManager;
-    private PendingIntent pendingIntent;
 
     public ToDoAdapter(Context context, ArrayList<String> taskNameList, ArrayList<String> dueDateList, OnTaskCompletedListener listener) {
         this.context = context;
@@ -83,15 +80,10 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
             db.removeTask(id);
             taskNameList.remove(position);
             dueDateList.remove(position);
-            cancelNotification(taskName);
             ((MainActivity) context).updateCounter(taskNameList.size());
             notifyDataSetChanged();
         });
 
-        holder.cardBtn.setOnLongClickListener(v -> {
-            scheduleNotification(taskNameList.get(position), dueDate);
-            return false;
-        });
     }
 
 
@@ -142,59 +134,8 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.MyViewHolder> 
         return (todayYear == dueYear && todayMonth == dueMonth && todayDay == dueDay);
     }
 
-    private void scheduleNotification(String taskName, String dueDate) {
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-
-        // Create an Intent for the notification
-        Intent intent = new Intent(context, NotificationReceiver.class);
-        intent.putExtra("task_name", taskName);
-        intent.putExtra("due_date", dueDate);
-
-        // Create a unique requestCode for each notification
-        int requestCode = taskName.hashCode(); // Using hashCode as requestCode
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
-
-        // Parse the due date
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
-        Calendar dueDateCalendar = Calendar.getInstance();
-        try {
-            dueDateCalendar.setTime(dateFormat.parse(dueDate));
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        // Get today's date
-        Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 0);
-        today.set(Calendar.MINUTE, 0);
-        today.set(Calendar.SECOND, 0);
-        today.set(Calendar.MILLISECOND, 0);
-
-        // Set the time for the notification
-        long triggerTime = dueDateCalendar.getTimeInMillis();
-        long currentTime = System.currentTimeMillis();
-
-        // Schedule the notification if the due date is in the future
-        if (triggerTime > currentTime) {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
-            showMessage("A reminder is set for " + taskName);
-        } else if (triggerTime < currentTime) {
-            showMessage("The task is past due/due today");
-        }
-    }
-
-
     private void showMessage(String msg) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-    }
-
-    private void cancelNotification(String taskName) {
-        Intent intent = new Intent(context, NotificationReceiver.class);
-        int requestCode = taskName.hashCode(); // Use the same requestCode as when creating the pending intent
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        alarmManager.cancel(pendingIntent);
     }
 
 }

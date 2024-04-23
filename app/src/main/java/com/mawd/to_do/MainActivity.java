@@ -11,7 +11,6 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,7 +21,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -111,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements ToDoAdapter.OnTas
             return insets;
         });
         askPermission();
-        createNotificationChannel();
         setReference();
         displayData();
         displayCompletedData();
@@ -134,10 +131,13 @@ public class MainActivity extends AppCompatActivity implements ToDoAdapter.OnTas
         btnAddTask.setOnClickListener(v -> {
             String newTask = inputNewTask.getText().toString();
             String dueDate = inputNewDate.getText().toString();
+            boolean isTaskExists = db.isTaskExist(newTask);
             if (newTask.isEmpty() || dueDate.isEmpty()) {
                 showMessage("Please Input All Fields.");
             } else if (newTask.length() <= 3) {
                 showMessage("Task Name Must Be At least 4 characters");
+            } else if (isTaskExists) {
+                showMessage("Task already exists");
             } else {
                 boolean isCompleted = false;
                 Task task = new Task(newTask, dueDate, isCompleted);
@@ -220,19 +220,8 @@ public class MainActivity extends AppCompatActivity implements ToDoAdapter.OnTas
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
-    private void createNotificationChannel() {
+    private void askPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "todo_channel";
-            String desc = "Channel for Alarm Manager";
-            int imp = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel channel = new NotificationChannel("todo_channel", name, imp);
-            channel.setDescription(desc);
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
-    private void askPermission(){
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, RC_NOTIFICATION);
         }
     }

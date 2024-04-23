@@ -120,6 +120,15 @@ public class Database extends SQLiteOpenHelper {
         return taskName;
     }
 
+    public boolean isTaskExist(String taskName) {
+        db = this.getReadableDatabase();
+
+        String query = "SELECT " + columnTaskName + " FROM " + tableToDo + " WHERE " + columnTaskName + " = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{taskName});
+
+        return cursor.moveToFirst();
+    }
+
     public Cursor readAllToDoData() {
         String query = "SELECT task_name, task_due_date FROM " + tableToDo + " WHERE task_is_completed = 'No'";
         db = this.getWritableDatabase();
